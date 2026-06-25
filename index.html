@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>尿液的形成 - 肾单位滤过与重吸收</title>
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --secondary: #10B981;
+            --blood: #EF4444;
+            --accent: #F59E0B;
+            --capsule: #FFFBEB;
+            --reabsorb: #10B981;
+            --success: #22C55E;
+            --bg: #F3F4F6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #111827;
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 24px;
+            background: #E5E7EB;
+            border: none;
+            border-radius: 9999px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 滤过作用模块样式 */
+        .filtration-grid {
+            display: grid;
+            grid-template-columns: 1fr 100px 1fr;
+            gap: 15px;
+            align-items: stretch;
+            margin-top: 20px;
+        }
+
+        .chamber {
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            min-height: 480px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            position: relative;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .chamber.drag-over {
+            border-color: var(--primary);
+            background-color: #EFF6FF;
+            transform: scale(1.02);
+        }
+
+        .chamber-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #F3F4F6;
+        }
+
+        .blood-vessel { 
+            border-top: 5px solid var(--blood); 
+            background-color: #FEF2F2;
+        }
+        .bowman-capsule { 
+            border-top: 5px solid var(--accent); 
+            background-color: var(--capsule); 
+        }
+        .tubule-chamber {
+            border-top: 5px solid #F59E0B;
+            background-color: #FFFBEB;
+        }
+        .capillary-chamber {
+            border-top: 5px solid #EF4444;
+            background-color: #FEF2F2;
+        }
+
+        .barrier-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .barrier-wall {
+            width: 70px;
+            flex: 1;
+            background: #D1D5DB;
+            border-radius: 35px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            border: 4px dashed #9CA3AF;
+        }
+
+        .pore {
+            width: 24px;
+            height: 24px;
+            background: var(--bg);
+            border-radius: 50%;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .substance-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 400px;
+        }
+
+        .substance-card {
+            padding: 12px 15px;
+            background: white;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            cursor: grab;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            touch-action: none;
+        }
+
+        .substance-card:hover {
+            border-color: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        .substance-card:active { cursor: grabbing; }
+        .substance-card .size { font-size: 0.8rem; color: #6B7280; font-family: monospace; }
+        
+        .substance-card.passed {
+            cursor: default;
+            background-color: #F9FAFB;
+            border-style: dashed;
+            opacity: 0.8;
+        }
+
+        .dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .filter-controls {
+            margin-top: 20px;
+            padding: 15px;
+            background: #EFF6FF;
+            border-radius: 12px;
+            border: 1px solid #DBEAFE;
+        }
+
+        .info-box {
+            background: #F9FAFB;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #D1D5DB;
+            border-radius: 5px;
+            appearance: none;
+            -webkit-appearance: none;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* 重吸收模块增强样式 */
+        .reabsorption-arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .arrow-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #10B981, #059669);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulseArrow 1.5s ease-in-out infinite;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .arrow-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        @keyframes pulseArrow {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .arrow-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #059669;
+            text-align: center;
+        }
+
+        /* 物质提示标签 */
+        .substance-hint {
+            font-size: 11px;
+            color: #6B7280;
+            background: #F3F4F6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        .hint-reabsorb {
+            color: #059669;
+            background: #D1FAE5;
+        }
+
+        .hint-stay {
+            color: #D97706;
+            background: #FEF3C7;
+        }
+
+        /* 进度条样式 */
+        .progress-container {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .progress-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #1F2937;
+        }
+
+        .progress-bar-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            width: 80px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 20px;
+            background: #E5E7EB;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10B981, #059669);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-percent {
+            font-size: 14px;
+            font-weight: bold;
+            color: #059669;
+            width: 50px;
+            text-align: right;
+        }
+
+        /* 物质卡片增强 */
+        .substance-card-enhanced {
+            padding: 10px 12px;
+            background: white;
+            border: 2px solid #E5E7EB;
+            border-radius: 10px;
+            cursor: grab;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            touch-action: none;
+            min-width: 70px;
+        }
+
+        .substance-card-enhanced:hover {
+            border-color: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .substance-card-enhanced.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .substance-card-enhanced .icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .substance-card-enhanced .name {
+            font-size: 13px;
+            color: #374151;
+        }
+
+        /* 提示框样式 */
+        .reabsorption-hint-box {
+            background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+            border: 2px solid #3B82F6;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .hint-icon {
+            width: 40px;
+            height: 40px;
+            background: #3B82F6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hint-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .hint-text {
+            font-size: 14px;
+            color: #1E40AF;
+            line-height: 1.5;
+        }
+
+        /* 肾小管和毛细血管的增强样式 */
+        .tubule-chamber-enhanced {
+            background: linear-gradient(180deg, #FEF3C7, #FDE68A);
+            border-top: 5px solid #F59E0B;
+        }
+
+        .capillary-chamber-enhanced {
+            background: linear-gradient(180deg, #FEE2E2, #FECACA);
+            border-top: 5px solid #EF4444;
+        }
+
+        /* 成功动画 */
+        .success-bounce {
+            animation: bounceSuccess 0.5s ease;
+        }
+
+        @keyframes bounceSuccess {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        /* 响应式布局 */
+        @media (max-width: 768px) {
+            .filtration-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .barrier-container {
+                flex-direction: row;
+                height: 80px;
+            }
+            
+            .barrier-wall {
+                width: 100%;
+                height: 50px;
+                flex-direction: row;
+                border-radius: 25px;
+            }
+            
+            .pore {
+                width: 20px;
+                height: 20px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .chamber {
+                min-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 style="font-size: 24px !important; font-weight: bold !important;">尿液的形成</h1>
+            <p style="font-size: 18px !important; font-weight: bold !important;">探索肾单位的滤过与重吸收作用</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn" data-page="filtration" tabindex="0">1. 滤过作用</button>
+            <button class="tab-btn active" data-page="reabsorption" tabindex="0">2. 重吸收作用</button>
+        </div>
+
+        <!-- 页面1: 滤过作用 -->
+        <section id="filtration" class="page">
+            <div class="info-box" style="font-weight: bold !important;">
+                <strong>滤过屏障（滤过膜）：</strong> 孔径为4-7nm，当肾小球毛细血管壁受损时，孔径会变大，导致大分子蛋白质甚至血细胞漏出。
+            </div>
+
+            <div class="filter-controls">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                    <span style="font-weight: bold;">滤过膜孔径调节: <span id="pore-size-val">7</span>nm</span>
+                </div>
+                <input type="range" id="pore-slider" min="7" max="15" value="7" step="1">
+                <p id="condition-text" style="font-size: 14px; margin-top: 2px; color: #2563EB; font-weight: 500;">健康状态</p>
+            </div>
+
+            <div class="filtration-grid">
+                <div class="chamber blood-vessel" id="blood-chamber">
+                    <div class="chamber-title">血液 (肾小球)</div>
+                    <div class="substance-list" id="blood-list">
+                        <div class="substance-card" draggable="true" data-size="0.3" data-name="水">
+                            <span>💧 水</span> <span class="size" style="text-align: center !important; font-size: 16px !important; font-weight: bold !important; color: rgb(0, 0, 0) !important;">～0.3nm</span>
+                        </div>
+                        <div class="substance-card" draggable="true" data-size="0.4" data-name="无机盐">
+                            <span>🧂 无机盐</span> <span class="size" style="font-size: 16px !important; font-weight: bold !important; color: rgb(0, 0, 0) !important;">&lt; 0.4nm</span>
+                        </div>
+                        <div class="substance-card" draggable="true" data-size="0.4" data-name="尿素">
+                            <span>🧪 尿素</span> <span class="size" style="font-size: 16px !important; color: rgb(0, 0, 0) !important; font-weight: bold !important;">&lt; 0.4nm</span>
+                        </div>
+                        <div class="substance-card" draggable="true" data-size="0.7" data-name="葡萄糖">
+                            <span>🍬 葡萄糖</span> <span class="size" style="font-size: 16px !important; color: rgb(0, 0, 0) !important; font-weight: bold !important;">～0.7nm</span>
+                        </div>
+                        <div class="substance-card" draggable="true" data-size="10" data-name="大分子蛋白质">
+                            <span>🥩 大分子蛋白质</span> <span class="size" style="font-size: 16px !important; color: rgb(0, 0, 0) !important; font-weight: bold !important;">～10nm</span>
+                        </div>
+                        <div class="substance-card" draggable="true" data-size="5000" data-name="血细胞">
+                            <span>🔴 血细胞</span> <span class="size" style="font-size: 16px !important; color: rgb(0, 0, 0) !important; font-weight: bold !important;">2000～8000nm</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="barrier-container">
+                    <div style="font-size: 18px !important; font-weight: bold; color: #6B7280; margin-bottom: 2px;">滤过膜</div>
+                    <div style="font-size: 14px !important; font-weight: 700; color: #374151; margin-bottom: 8px; text-align: center;">孔径为4-7nm</div>
+                    <div class="barrier-wall" id="filter-wall">
+                        <div class="pore"></div>
+                        <div class="pore"></div>
+                        <div class="pore"></div>
+                        <div class="pore"></div>
+                        <div class="pore"></div>
+                    </div>
+                </div>
+
+                <div class="chamber bowman-capsule" id="bowman-chamber">
+                    <div class="chamber-title">原尿 (肾小囊腔)</div>
+                    <div class="substance-list" id="bowman-list">
+                        <!-- 滤过的物质将显示在此 -->
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: center; gap: 4px; margin-top: 8px;">
+                <button id="check-filtration" style="padding: 16px 40px; background: #DCFCE7; color: #166534; border: 2px solid #22C55E; border-radius: 12px; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3); font-size: 18px; cursor: pointer; transition: all 0.3s;" tabindex="0">提交并检查答案</button>
+                <button id="reset-filter" style="padding: 16px 32px; background: #6B7280; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer;" tabindex="0">重置模拟</button>
+            </div>
+
+            <div id="filtration-feedback" style="display: none; margin-top: 6px; padding: 24px; border-radius: 16px; border: 2px solid; text-align: center; font-weight: bold; font-size: 18px;"></div>
+        </section>
+
+        <!-- 页面2: 重吸收作用 -->
+        <section id="reabsorption" class="page active">
+            <!-- 三个方框布局 -->
+            <div style="display: flex; margin-top: 20px; gap: 5px;">
+                <!-- 左侧：肾小管原尿 + 终尿 -->
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
+                    <!-- 肾小管内 (原尿) -->
+                    <div class="chamber" id="tubule-original" style="background: #FFFBEB; border-top: 5px solid #F59E0B; min-height: 245px;">
+                        <div class="chamber-title" style="background: #FEF3C7;">🟡 肾小管内 (原尿)</div>
+                        <div class="substance-list" id="original-list" style="min-height: 180px;">
+                            <div class="substance-card" draggable="true" data-type="water" data-name="水">
+                                <span>💧 水</span>
+                            </div>
+                            <div class="substance-card" draggable="true" data-type="salts" data-name="无机盐">
+                                <span>🧂 无机盐</span>
+                            </div>
+                            <div class="substance-card" draggable="true" data-type="glucose" data-name="葡萄糖">
+                                <span>🍬 葡萄糖</span>
+                            </div>
+                            <div class="substance-card" draggable="true" data-type="urea" data-name="尿素">
+                                <span>🧪 尿素</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 肾小管内 (终尿) -->
+                    <div class="chamber" id="tubule-final" style="background: #FEFCE8; border-top: 5px solid #FBBF24; min-height: 245px;">
+                        <div class="chamber-title" style="background: #FEF3C7;">🟡 肾小管内 (终尿)</div>
+                        <div class="substance-list" id="final-list" style="min-height: 180px;"></div>
+                    </div>
+                </div>
+
+                <!-- 中间虚线分隔 -->
+                <div style="width: 40px; position: relative;">
+                    <div style="position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; height: 100%; border-left: 2px dashed #374151;"></div>
+                    <div style="position: absolute; left: 28px; top: 0; bottom: 0; width: 2px; height: 100%; border-left: 2px dashed #374151;"></div>
+                </div>
+
+                <!-- 右侧：毛细血管 -->
+                <div class="chamber" id="capillary-chamber" style="flex: 1; background: #FEF2F2; border-top: 5px solid #EF4444; min-height: 500px;">
+                    <div class="chamber-title" style="background: #FEE2E2;">🔴 毛细血管内 (血液)</div>
+                    <div class="substance-list" id="capillary-list" style="min-height: 440px;"></div>
+                </div>
+            </div>
+
+            <!-- 提交按钮 -->
+            <div style="display: flex; justify-content: center; gap: 10px; margin-top: 15px;">
+                <button id="submit-reabsorption" style="padding: 14px 40px; background: #DCFCE7; color: #166534; border: 2px solid #22C55E; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer;">✅ 提交答案</button>
+                <button id="reset-reabsorption" style="padding: 14px 32px; background: #6B7280; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer;">🔄 重置</button>
+            </div>
+
+            <!-- 反馈区域 -->
+            <div id="reabsorption-feedback" style="display: none; margin-top: 15px; padding: 20px; border-radius: 12px; border: 2px solid; text-align: center;"></div>
+
+            <!-- 总结区域 -->
+            <div id="summary-section" style="display: none; margin-top: 20px; padding: 25px; background: #EFF6FF; border-radius: 16px; border: 2px solid #DBEAFE;">
+                <h3 style="font-size: 20px; font-weight: bold; color: #1E40AF; margin-bottom: 20px; text-align: center;">📚 肾小管重吸收作用总结</h3>
+                
+                <div style="font-size: 16px; line-height: 2; color: #1F2937;">
+                    原尿流经肾小管时，全部的 <span class="blank-select" data-answer="葡萄糖">
+                        <select class="blank-dropdown" data-target="葡萄糖">
+                            <option value="">请选择</option>
+                            <option value="水">水</option>
+                            <option value="无机盐">无机盐</option>
+                            <option value="葡萄糖">葡萄糖</option>
+                            <option value="尿素">尿素</option>
+                        </select>
+                    </span>、大部分 <span class="blank-select" data-answer="水">
+                        <select class="blank-dropdown" data-target="水">
+                            <option value="">请选择</option>
+                            <option value="水">水</option>
+                            <option value="无机盐">无机盐</option>
+                            <option value="葡萄糖">葡萄糖</option>
+                            <option value="尿素">尿素</option>
+                        </select>
+                    </span> 以及部分 <span class="blank-select" data-answer="无机盐">
+                        <select class="blank-dropdown" data-target="无机盐">
+                            <option value="">请选择</option>
+                            <option value="水">水</option>
+                            <option value="无机盐">无机盐</option>
+                            <option value="葡萄糖">葡萄糖</option>
+                            <option value="尿素">尿素</option>
+                        </select>
+                    </span> 被肾小管重新吸回到毛细血管中，而尿素和其他代谢产物则留在肾小管中。
+                </div>
+
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #DBEAFE;">
+                    <h4 style="font-size: 18px; font-weight: bold; color: #1E40AF; margin-bottom: 10px;">💡 重吸收作用的意义：</h4>
+                    <p style="font-size: 15px; line-height: 1.8; color: #374151;">
+                        使原尿中大部分的水以及对人体有用的物质被重新利用，并浓缩了尿液，进而维持了机体水和无机盐的平衡。
+                    </p>
+                </div>
+
+                <div style="margin-top: 15px; text-align: center;">
+                    <button id="check-summary" style="padding: 12px 30px; background: #3B82F6; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">📝 检查答案</button>
+                    <button id="show-answers" style="margin-left: 10px; padding: 12px 30px; background: #F59E0B; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">👀 显示答案</button>
+                </div>
+
+                <div id="summary-feedback" style="display: none; margin-top: 15px; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold;"></div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // 1. 标签页切换逻辑
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.page).classList.add('active');
+            });
+        });
+
+        // 2. 滤过作用模块逻辑
+        let currentPoreSize = 7;
+        const poreSlider = document.getElementById('pore-slider');
+        const poreSizeVal = document.getElementById('pore-size-val');
+        const conditionText = document.getElementById('condition-text');
+        const pores = document.querySelectorAll('.pore');
+        const bloodList = document.getElementById('blood-list');
+        const bowmanList = document.getElementById('bowman-list');
+        const bowmanChamber = document.getElementById('bowman-chamber');
+
+        // 孔径调节
+        poreSlider.addEventListener('input', (e) => {
+            currentPoreSize = parseInt(e.target.value);
+            window.currentPoreSize = currentPoreSize;
+            poreSizeVal.textContent = currentPoreSize;
+            
+            const scale = 0.5 + (currentPoreSize / 15);
+            pores.forEach(p => p.style.transform = `scale(${scale})`);
+
+            if (currentPoreSize === 7) {
+                conditionText.textContent = "健康状态：大分子蛋白质和血细胞无法通过。";
+                conditionText.style.color = '#2563EB';
+            } else if (currentPoreSize < 12) {
+                conditionText.textContent = "轻微受损：滤过屏障孔径增大。";
+                conditionText.style.color = '#D97706';
+            } else if (currentPoreSize < 15) {
+                conditionText.textContent = "蛋白尿：孔径达12nm，大分子蛋白质开始通过！";
+                conditionText.style.color = '#EA580C';
+            } else {
+                conditionText.textContent = "血尿：膜结构破损，血细胞也可通过！";
+                conditionText.style.color = '#DC2626';
+            }
+        });
+
+        // 拖拽交互核心逻辑
+        let draggedItem = null;
+
+        document.querySelectorAll('.substance-card').forEach(card => {
+            card.addEventListener('dragstart', function(e) {
+                draggedItem = this;
+                this.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', '');
+            });
+
+            card.addEventListener('dragend', function() {
+                this.classList.remove('dragging');
+                draggedItem = null;
+                document.querySelectorAll('.chamber').forEach(c => c.classList.remove('drag-over'));
+            });
+        });
+
+        // 血液区域也允许放回
+        document.getElementById('blood-chamber').addEventListener('dragover', (e) => {
+            e.preventDefault();
+            document.getElementById('blood-chamber').classList.add('drag-over');
+        });
+
+        document.getElementById('blood-chamber').addEventListener('dragleave', () => {
+            document.getElementById('blood-chamber').classList.remove('drag-over');
+        });
+
+        document.getElementById('blood-chamber').addEventListener('drop', (e) => {
+            e.preventDefault();
+            document.getElementById('blood-chamber').classList.remove('drag-over');
+            if (draggedItem) bloodList.appendChild(draggedItem);
+        });
+
+        bowmanChamber.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            bowmanChamber.classList.add('drag-over');
+        });
+
+        bowmanChamber.addEventListener('dragleave', () => {
+            bowmanChamber.classList.remove('drag-over');
+        });
+
+        bowmanChamber.addEventListener('drop', (e) => {
+            e.preventDefault();
+            bowmanChamber.classList.remove('drag-over');
+            if (draggedItem) {
+                bowmanList.appendChild(draggedItem);
+            }
+        });
+
+        // 提交判定逻辑
+        document.getElementById('check-filtration').addEventListener('click', () => {
+            const feedback = document.getElementById('filtration-feedback');
+            const cards = document.querySelectorAll('.substance-card');
+            let mistakes = 0;
+
+            cards.forEach(card => {
+                const size = parseFloat(card.dataset.size);
+                const canPass = size <= currentPoreSize || (size > 1000 && currentPoreSize >= 15);
+                const isInBowman = card.parentElement === bowmanList;
+
+                card.className = 'substance-card';
+                if (card.classList.contains('dragging')) card.classList.add('dragging');
+
+                if (canPass && isInBowman) {
+                    card.style.borderColor = '#22C55E';
+                    card.style.backgroundColor = '#DCFCE7';
+                } else if (!canPass && !isInBowman) {
+                    card.style.borderColor = '#22C55E';
+                    card.style.backgroundColor = '#DCFCE7';
+                } else {
+                    mistakes++;
+                    card.style.borderColor = '#DC2626';
+                    card.style.backgroundColor = '#FEF2F2';
+                }
+            });
+
+            feedback.style.display = 'block';
+            if (mistakes === 0) {
+                feedback.textContent = '✅ 滤过模拟成功！你正确判断了各种物质是否能通过滤过膜。';
+                feedback.style.backgroundColor = '#DCFCE7';
+                feedback.style.borderColor = '#22C55E';
+                feedback.style.color = '#166534';
+            } else {
+                feedback.textContent = `❌ 有${mistakes}处分类错误，请根据物质大小和滤过膜孔径重新尝试。`;
+                feedback.style.backgroundColor = '#FEF2F2';
+                feedback.style.borderColor = '#DC2626';
+                feedback.style.color = '#991B1B';
+            }
+        });
+
+        // 重置滤过模拟
+        document.getElementById('reset-filter').addEventListener('click', () => {
+            // 只重置滤过作用模块的卡片，不影响重吸收模块
+            const bloodCards = document.querySelectorAll('#blood-list .substance-card, #bowman-list .substance-card');
+            
+            // 定义初始顺序
+            const initialOrder = ['水', '无机盐', '尿素', '葡萄糖', '大分子蛋白质', '血细胞'];
+            
+            // 创建临时数组存储卡片
+            const cardsArray = Array.from(bloodCards);
+            
+            // 按初始顺序排序
+            cardsArray.sort((a, b) => {
+                const nameA = a.dataset.name;
+                const nameB = b.dataset.name;
+                return initialOrder.indexOf(nameA) - initialOrder.indexOf(nameB);
+            });
+            
+            // 清空血液列表
+            bloodList.innerHTML = '';
+            
+            // 按正确顺序添加卡片
+            cardsArray.forEach(card => {
+                card.className = 'substance-card';
+                card.style.borderColor = '#E5E7EB';
+                card.style.backgroundColor = 'white';
+                bloodList.appendChild(card);
+            });
+            
+            document.getElementById('filtration-feedback').style.display = 'none';
+        });
+
+        // 3. 重吸收作用模块逻辑
+        const originalList = document.getElementById('original-list');
+        const finalList = document.getElementById('final-list');
+        const capillaryList = document.getElementById('capillary-list');
+        const reabsorbFeedback = document.getElementById('reabsorption-feedback');
+        const summarySection = document.getElementById('summary-section');
+
+        let draggedType = null;
+        let draggedName = null;
+
+        document.querySelectorAll('#original-list .substance-card').forEach(card => {
+            card.addEventListener('dragstart', function(e) {
+                draggedType = this.dataset.type;
+                draggedName = this.dataset.name;
+                this.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', '');
+            });
+
+            card.addEventListener('dragend', function() {
+                this.classList.remove('dragging');
+                draggedType = null;
+                draggedName = null;
+                document.querySelectorAll('.chamber').forEach(c => c.classList.remove('drag-over'));
+            });
+        });
+
+        document.querySelectorAll('#final-list, #capillary-list').forEach(list => {
+            const chamber = list.closest('.chamber');
+            chamber.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                chamber.classList.add('drag-over');
+            });
+            chamber.addEventListener('dragleave', () => {
+                chamber.classList.remove('drag-over');
+            });
+            chamber.addEventListener('drop', (e) => {
+                e.preventDefault();
+                chamber.classList.remove('drag-over');
+                if (draggedType && draggedName) {
+                    // 复制卡片而不是移动
+                    const newCard = document.createElement('div');
+                    newCard.className = 'substance-card';
+                    newCard.dataset.type = draggedType;
+                    newCard.dataset.name = draggedName;
+                    
+                    // 根据类型设置图标
+                    let icon = '';
+                    if (draggedType === 'water') icon = '💧';
+                    else if (draggedType === 'salts') icon = '🧂';
+                    else if (draggedType === 'glucose') icon = '🍬';
+                    else if (draggedType === 'urea') icon = '🧪';
+                    
+                    newCard.innerHTML = `<span>${icon} ${draggedName}</span>`;
+                    newCard.draggable = true;
+                    
+                    newCard.addEventListener('dragstart', function(e) {
+                        draggedType = this.dataset.type;
+                        draggedName = this.dataset.name;
+                        this.classList.add('dragging');
+                        e.dataTransfer.setData('text/plain', '');
+                    });
+                    newCard.addEventListener('dragend', function() {
+                        this.classList.remove('dragging');
+                        draggedType = null;
+                        draggedName = null;
+                    });
+                    
+                    list.appendChild(newCard);
+                }
+            });
+        });
+
+        document.getElementById('submit-reabsorption').addEventListener('click', () => {
+            const inCapillary = Array.from(capillaryList.children).map(c => c.dataset.type);
+            const inFinal = Array.from(finalList.children).map(c => c.dataset.type);
+            
+            const correctCapillary = ['water', 'salts', 'glucose'];
+            const correctFinal = ['water', 'salts', 'urea'];
+            
+            const isCapillaryCorrect = correctCapillary.every(t => inCapillary.includes(t));
+            const isFinalCorrect = correctFinal.every(t => inFinal.includes(t));
+            
+            reabsorbFeedback.style.display = 'block';
+            if (isCapillaryCorrect && isFinalCorrect) {
+                reabsorbFeedback.innerHTML = "✅ 重吸收模拟成功！<br>水、无机盐、葡萄糖被重吸收回血液，水、无机盐、尿素留在肾小管形成尿液。";
+                reabsorbFeedback.style.backgroundColor = '#DCFCE7';
+                reabsorbFeedback.style.borderColor = '#22C55E';
+                reabsorbFeedback.style.color = '#166534';
+                summarySection.style.display = 'block';
+            } else {
+                let msg = "❌ 答案不正确！<br>";
+                if (!isCapillaryCorrect) {
+                    msg += "毛细血管内应该包含：水、无机盐、葡萄糖<br>";
+                }
+                if (!isFinalCorrect) {
+                    msg += "终尿内应该包含：水、无机盐、尿素";
+                }
+                reabsorbFeedback.innerHTML = msg;
+                reabsorbFeedback.style.backgroundColor = '#FEF2F2';
+                reabsorbFeedback.style.borderColor = '#DC2626';
+                reabsorbFeedback.style.color = '#991B1B';
+            }
+        });
+
+        document.getElementById('reset-reabsorption').addEventListener('click', () => {
+            // 清除毛细血管和终尿中的卡片
+            finalList.innerHTML = '';
+            capillaryList.innerHTML = '';
+            reabsorbFeedback.style.display = 'none';
+            summarySection.style.display = 'none';
+            
+            document.querySelectorAll('.blank-select').forEach(el => {
+                el.classList.remove('correct', 'wrong');
+                el.querySelector('select').value = '';
+            });
+            document.getElementById('summary-feedback').style.display = 'none';
+        });
+
+        // 总结填空检查
+        document.getElementById('check-summary').addEventListener('click', () => {
+            let correctCount = 0;
+            let totalCount = 0;
+            
+            document.querySelectorAll('.blank-select').forEach(el => {
+                totalCount++;
+                const answer = el.dataset.answer;
+                const selected = el.querySelector('select').value;
+                
+                if (selected === answer) {
+                    correctCount++;
+                    el.classList.remove('wrong');
+                    el.classList.add('correct');
+                } else {
+                    el.classList.remove('correct');
+                    el.classList.add('wrong');
+                }
+            });
+            
+            const feedback = document.getElementById('summary-feedback');
+            feedback.style.display = 'block';
+            
+            if (correctCount === totalCount) {
+                feedback.textContent = `🎉 全部正确！你已经掌握了重吸收作用的知识！`;
+                feedback.style.backgroundColor = '#DCFCE7';
+                feedback.style.color = '#166534';
+            } else {
+                feedback.textContent = `继续加油！你答对了 ${correctCount}/${totalCount} 个空。`;
+                feedback.style.backgroundColor = '#FEF3C7';
+                feedback.style.color = '#92400E';
+            }
+        });
+
+        document.getElementById('show-answers').addEventListener('click', () => {
+            document.querySelectorAll('.blank-select').forEach(el => {
+                el.querySelector('select').value = el.dataset.answer;
+                el.classList.add('correct');
+                el.classList.remove('wrong');
+            });
+            
+            const feedback = document.getElementById('summary-feedback');
+            feedback.style.display = 'block';
+            feedback.textContent = '📖 正确答案已显示！';
+            feedback.style.backgroundColor = '#EFF6FF';
+            feedback.style.color = '#1E40AF';
+        });
+    </script>
+</body>
+</html>
